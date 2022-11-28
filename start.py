@@ -1,20 +1,32 @@
 from collections import Counter
+import sys
 
 
 def choose_mode():        ###Начальный экран
-    start_output()
-    first_in = input()
-    if first_in == '1':
-        code_txt_choice('ru')
-    elif first_in == '2':
-        end_way_to_file_in()
-    elif first_in == '3':
-        code_txt_choice('ru', True)
-    elif first_in == '4':
-        end_way_to_file_in(True)
+    if len(sys.argv) > 1:
+        more_start_output()
+        first_in = input()
+        if first_in == '1':
+            end_way_to_file_in(False, True)
+        elif first_in == '2':
+            end_way_to_file_in(True, True)
+        else:
+            print('Некорректный ввод')
+            choose_mode()
     else:
-        print('Некорректный ввод')
-        choose_mode()
+        start_output()
+        first_in = input()
+        if first_in == '1':
+            code_txt_choice('ru')
+        elif first_in == '2':
+            end_way_to_file_in()
+        elif first_in == '3':
+            code_txt_choice('ru', True)
+        elif first_in == '4':
+            end_way_to_file_in(True)
+        else:
+            print('Некорректный ввод')
+            choose_mode()
 
 
 def code_txt_choice(language, decrypt=False):           ###для текстового выбор шифрования
@@ -54,7 +66,7 @@ def zesar_txt_input(decrypt=False):               ###для текстового
     key_input_zesar_txt(language, txt, decrypt, auto)
 
 
-def vizh_txt_input(decrypt=False):             ###для текстового ввод шифра Цезаря
+def vizh_txt_input(decrypt=False):             ###для текстового ввод шифра Вижинера
     print('Введите текст:')
     txt = input()
     if ord(txt[0]) > 1000:
@@ -66,7 +78,7 @@ def vizh_txt_input(decrypt=False):             ###для текстового в
     vizh_code_end(language, txt, key, decrypt)
 
 
-def vernam_txt_input(decrypt=False):  ###для текстового ввод шифра Цезаря
+def vernam_txt_input(decrypt=False):  ###для текстового ввод шифра Вернама
     print('Введите текст:')
     txt = input()
     if ord(txt[0]) > 1000:
@@ -120,7 +132,7 @@ def vizh_code_end(language, txt, key, decrypt=False):           ###для тек
             print(vizh_in_txt_ru(txt, key))
 
 
-def vernam_code_end(language, txt, key, decrypt=False):           ###для текстового вывод шифра Вижинера
+def vernam_code_end(language, txt, key, decrypt=False):           ###для текстового вывод шифра Вернама
     if (len(txt.replace(" ", "")) == len(key)):
         if language == 'en':
             if decrypt:
@@ -232,13 +244,18 @@ def vizh_in_txt_ru(txt, key_w, mult=1):  ###процесс зашифровки 
     return txt_vizh
 
 
-def vizh_in_file(way_to_file, key_w, mult=1):      ###процесс зашифровки файла Вижинером
+def vizh_in_file(way_to_file, key_w, mult=1, isVern=False):      ###процесс зашифровки файла Вижинером
     f = open(way_to_file, 'rb')
     n = 256
     bs = f.read()
     key_w = key_w.lower()
     crypt_bs = []
     index_of_key = 0
+    if isVern:
+        if not (len(bs) == len(key_w)):
+            print('Неверно введен ключ, вот невезуха, да?')
+            return False
+
     for bit in bs:
         key = ord(key_w[index_of_key % len(key_w)])
         crypt_bs.append((bit + key*mult) % n)
@@ -247,6 +264,7 @@ def vizh_in_file(way_to_file, key_w, mult=1):      ###процесс зашиф�
     f = open(way_to_file, 'wb')
     f.write(bytes(crypt_bs))
     f.close()
+    return True
 
 
 def vernam_in_txt_ru(txt, key_txt):            ###процесс зашифровки рус текста Вернамом
@@ -291,8 +309,8 @@ def vizh_out_txt_ru(txt, key_w):        ###процесс расшифровки
     return vizh_in_txt_ru(txt, key_w, -1)
 
 
-def vizh_out_file(way_to_file, key_w):           ###процесс расшифровки файла Вижинером
-    vizh_in_file(way_to_file, key_w, -1)
+def vizh_out_file(way_to_file, key_w, mult=1, isVern=False):           ###процесс расшифровки файла Вижинером
+    return vizh_in_file(way_to_file, key_w, -1, isVern)
 
 
 def vernam_out_txt_en(txt, key_txt):            ###процесс расшифровки англ текста Вернамом
@@ -315,9 +333,12 @@ def final():                     ###Конечная
         pass
 
 
-def end_way_to_file_in(decrypt=False):      ###для файлового ввода запрос с проверками на корректности пути до файла
-    print('Введите путь к файлу:')
-    way_to_file = input()
+def end_way_to_file_in(decrypt=False, aboba=False):      ###для файлового ввода запрос с проверками на корректности пути до файла
+    if not aboba:
+        print('Введите путь к файлу:')
+        way_to_file = input()
+    else:
+        way_to_file = sys.argv[1]
     try:
         f = open(way_to_file, 'rb+')
         f.close()
@@ -342,7 +363,7 @@ def zesar_code_file_end(way_to_file, key, decrypt=False):               ###дл�
         print('Шифрование завершено')
 
 
-def zesar_key_files(way_to_file, decrypt=False):                         ###для файлового ввода проверка ключа
+def zesar_key_files(way_to_file, decrypt=False):                         ###для файлового ввода проверка ключа Цезарь
     key_output()
     key = input()
     try:
@@ -353,15 +374,16 @@ def zesar_key_files(way_to_file, decrypt=False):                         ###дл
         zesar_key_files(way_to_file, decrypt)
 
 
-def vizh_code_file_end(way_to_file, decrypt=False):                ###для файлового ввода за/расшифровка файла Вижинером и замена
+def vizh_code_file_end(way_to_file, decrypt=False, isVern=False):                ###для файлового ввода за/расшифровка файла Вижинером и замена
+    print(isVern)
     key_output()
     key = input()
     if decrypt:
-        vizh_out_file(way_to_file, key)
-        print('Расшифровка прошла успешно')
+        if vizh_out_file(way_to_file, key, 1, isVern):
+            print('Расшифровка прошла успешно')
     else:
-        vizh_in_file(way_to_file, key)
-        print('Шифрование завершено')
+        if vizh_in_file(way_to_file, key, 1, isVern):
+            print('Шифрование завершено')
 
 
 def code_file_choice(way_to_file, decrypt=False):                  ###для файлового ввода выбор за/расшифровки
@@ -371,23 +393,23 @@ def code_file_choice(way_to_file, decrypt=False):                  ###для ф�
         zesar_key_files(way_to_file, decrypt)
     elif code_files_in == '2':
         vizh_code_file_end(way_to_file, decrypt)
+    elif code_files_in == '3':
+        vizh_code_file_end(way_to_file, decrypt, True)
     else:
         print('Некорректный ввод')
         code_file_choice(way_to_file, decrypt)
 
 
 def start_output():                                     ###старт общий
-    print('Выберите тип шифрования:')
-    print('1. Шифровка текста')
-    print('2. Шифровка файла')
-    print('3. Расшифровка текста')
-    print('4. Расшифровка файла')
+    print('Выберите тип шифрования:\n1. Шифровка текста\n2. Шифровка файла\n3. Расшифровка текста\n4. Расшифровка файла')
+
+
+def more_start_output():
+    print('Выберите тип шифрования:\n 1. Шифровка файла\n 2. Расшифровка файла') ###для терминала выбор типа шифрования
 
 
 def output_files():                                    ###старт для файла
-    print('Выберите шифрование:')
-    print('1. Шифр Цезаря')
-    print('2. Шифр Виженера')
+    print('Выберите шифрование:\n1. Шифр Цезаря\n2. Шифр Виженера\n3. Шифр Вернама')
 
 
 def end_output_file():                                ###просьба ввести путь к файлу
@@ -395,10 +417,7 @@ def end_output_file():                                ###просьба ввес
 
 
 def output_txt():                                   ###старт для текста
-    print('Выберите шифрование:')
-    print('1. Шифр Цезаря')
-    print('2. Шифр Виженера')
-    print('3. Шифр Вернама')
+    print('Выберите шифрование:\n1. Шифр Цезаря\n2. Шифр Виженера\n3. Шифр Вернама')
 
 
 def key_output():                                    ###ввод ключа
@@ -406,6 +425,4 @@ def key_output():                                    ###ввод ключа
 
 
 def end_output():                                    ###конец работы
-    print('Ещё что-то?')
-    print('1. Шифровать!')
-    print('2. Выход')
+    print('Ещё что-то?\n1. Шифровать!\n2. Выход')
